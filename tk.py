@@ -4,11 +4,13 @@ from tkinter import *
 from PIL import Image, ImageTk
 from bs4 import BeautifulSoup
 import requests as rq
-import time
+import json
 
 IMAGE_HASH = ''
-COOKIE = ''
-def login(username,password,hashcode):
+COOKIES = {}
+def login(username,password,hashcode,keeplogin):
+    global IMAGE_HASH
+    global COOKIES
     # print('login with:' + username + ':' + password)
     '''
     username:hansnow
@@ -21,16 +23,22 @@ def login(username,password,hashcode):
     "imagestring": hashcode,
     "imagehash": IMAGE_HASH}
 
-    r = rq.post('http://bt.byr.cn/takelogin.php',params=payload)
-    # soup = BeautifulSoup(r.text)
-    # name = soup.select('#info_block a[href^="userdetails"]')[0].get_text()
-    # print(name)
-    print(r.text)
-    print(r.history)
+    r = rq.post('http://bt.byr.cn/takelogin.php',data=payload,allow_redirects=False)
+    if not ('图片代码无效' in r.text):
+        COOKIES = rq.utils.dict_from_cookiejar(r.cookies)
+        if keeplogin.get():
+            with open('cookies.txt','w') as f:
+                f.write(json.dumps(COOKIES))
+        
+        print('login success')
+    else:
+        print('login failed')
+        
 
 
 
 def refresh():
+    global IMAGE_HASH
     html = rq.get('http://bt.byr.cn/login.php').text
     soup = BeautifulSoup(html)
     IMAGE_HASH = soup.select('input[name="imagehash"]')[0]['value']
@@ -50,7 +58,9 @@ class App:
         refresh()
         frame = Frame(master)
         frame.pack()
-        # frame.title = 'BYRBT TOOL'
+        
+        self.keeplogin = IntVar()
+
         self.UserLabel = Label(frame,
             text="Username")
         self.PassLabel = Label(frame,
@@ -64,9 +74,9 @@ class App:
         self.UserEntry = Entry(frame)
         self.PassEntry = Entry(frame,show='*')
         self.HashEntry = Entry(frame)
-        self.UserEntry.grid(row=0,column=1)
-        self.PassEntry.grid(row=1,column=1)
-        self.HashEntry.grid(row=2,column=1)
+        self.UserEntry.grid(row=0,column=1,columnspan=2)
+        self.PassEntry.grid(row=1,column=1,columnspan=2)
+        self.HashEntry.grid(row=2,column=1,columnspan=2)
 
         self.ImgBox = ImageTk.PhotoImage(file='image.png')
         self.ImgLabel = Label(frame, image=self.ImgBox)
@@ -74,10 +84,13 @@ class App:
         self.ImgLabel.grid(row=3,column=0,columnspan=2)
         
         self.RefreshBtn = Button(frame, text="Refresh",command=self.refresh)
-        self.RefreshBtn.grid(row=4,column=0)
+        self.RefreshBtn.grid(row=3,column=2,sticky=W+E)
+
+        self.KeepLoginChkBtn = Checkbutton(frame,text='KeepLogin',variable=self.keeplogin)
+        self.KeepLoginChkBtn.grid(row=4,column=0)
 
         self.LoginBtn = Button(frame,text='Login',command=self.login)
-        self.LoginBtn.grid(row=4,column=1,sticky=W+E)
+        self.LoginBtn.grid(row=4,column=1,columnspan=2,sticky=W+E)
 
     def refresh(self):
         refresh()
@@ -87,7 +100,8 @@ class App:
         username = self.UserEntry.get()
         password = self.PassEntry.get()
         hashcode = self.HashEntry.get()
-        login(username,password,hashcode)
+        login(username,password,hashcode,self.keeplogin)
+        # login('hansnow','woshixh4291221',hashcode)
 
 
 
