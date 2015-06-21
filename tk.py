@@ -113,8 +113,6 @@ class makeLoginPanel:
         username = self.UserEntry.get()
         password = self.PassEntry.get()
         hashcode = self.HashEntry.get()
-        # login(username,password,hashcode,self.keeplogin)
-        # # login('hansnow','woshixh4291221',hashcode)
         '''
         The login form-data are here:
 
