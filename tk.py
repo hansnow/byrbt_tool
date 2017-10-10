@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding:utf8 -*-
-from tkinter import *
+from tkinter import Tk, Toplevel, Frame, IntVar, Label, W, Entry, Button, E, Checkbutton
 from PIL import Image, ImageTk
 from bs4 import BeautifulSoup
 import requests as rq
